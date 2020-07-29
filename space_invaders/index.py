@@ -1,5 +1,6 @@
 import pygame
 import random
+from math import sqrt, pow
 
 #inicializa o pygame
 pygame.init()
@@ -23,7 +24,7 @@ playerX_change = 0
 
 # Inimigo
 enemyImg = pygame.image.load('icons/enemy.png')
-enemyX = random.randint(0, 800)
+enemyX = random.randint(0, 735)
 enemyY = random.randint(50, 150)
 enemyX_change = 2
 enemyY_change = 10
@@ -36,7 +37,7 @@ bulletX_change = 0
 bulletY_change = 10
 bullet_state = "ready"
 
-
+score = 0
 def player(x, y):
     #coloca um elemento na posição indicada
     screen.blit(playerImg, (x, y))
@@ -50,6 +51,11 @@ def enemy(x, y):
     #coloca um elemento na posição indicada
     screen.blit(enemyImg, (x, y))
 
+def is_collision(enemyX, enemyY, bulletX, bulletY):
+    distance = sqrt(pow(enemyX-bulletX, 2) + pow(enemyY - bulletY, 2))
+    if distance < 27:
+        return True
+    return False
 
 #Loop infinito do jogo
 running = True
@@ -66,8 +72,10 @@ while running:
                 playerX_change = -2
             if event.key == pygame.K_RIGHT:
                 playerX_change = 2
-            if event.key == pygame.K_SPACE:
-                fire_bullet(playerX, bulletY)
+            if event.key == pygame.K_SPACE and bullet_state is "ready":
+                # seta a coordenada da bala com as coordenadas atuais da nave
+                bulletX = playerX
+                fire_bullet(bulletX, bulletY)
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                 playerX_change = 0
@@ -91,10 +99,23 @@ while running:
         enemyY += enemyY_change
 
     # Movimento da bala
+    if bulletY <= 0:
+        bulletY = 480
+        bullet_state = "ready"
+
     if bullet_state is "fire":
-        fire_bullet(playerX, bulletY)
+        fire_bullet(bulletX, bulletY)
         bulletY -= bulletY_change
-    
+
+    # verifica colisao
+    collision = is_collision(enemyX, enemyY, bulletX, bulletY)
+    if collision:
+        bulletY = 480
+        bullet_state = "ready"
+        score += 1
+        print(score)
+        enemyX = random.randint(0, 735)
+        enemyY = random.randint(50, 150)
 
     player(playerX, playerY)
     enemy(enemyX, enemyY)
